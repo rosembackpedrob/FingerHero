@@ -14,7 +14,8 @@ View customizada para desenho personalizado
 
 
 class DrawView : View, View.OnTouchListener {
-    val circleRadius = 70.0f
+    val circleRadius = 30.0f
+    val notesRadius = 50.0f
 
     val colors =
         arrayOf(Color.BLUE, Color.GREEN, Color.RED, Color.YELLOW, Color.CYAN)
@@ -22,9 +23,6 @@ class DrawView : View, View.OnTouchListener {
     // Especifica qual circulo esta ativo
     var circleEnabled = Array<Boolean>(5){false}
     var positionCircle = Array<PointF>(5){ PointF(0.0f, 0.0f) }
-
-    //objetos
-    lateinit var inst1 : Circle
 
     init {
 
@@ -57,20 +55,58 @@ class DrawView : View, View.OnTouchListener {
         val centerX = (width / 2.0f)
         val centerY = (height / 2.0f)
 
-        //definindo objetos lateinit
-        var inst1 = Circle(centerX,centerY)
+        //definindo objetos
+        var inst1 = Circle(250.0f,90.0f)
+        var inst2 = Circle(200.0f,250.0f )
+        var inst3 = Circle(200.0f,420.0f)
+        var inst4= Circle(250.0f,580.0f)
 
-        //desenhando objetos
-        canvas.drawCircle(inst1.posX, inst1.posY, inst1.radius, inst1.paint)
+        var listInst = arrayOf(inst1, inst2, inst3, inst4)
 
-        //colisão de todos os toques contra o inst1
-        for (position in positionCircle)
-        {
-            if(circleCollision(inst1.position, position, inst1.radius, circleRadius)){
-                inst1.updateColor(Color.RED)
-                canvas.drawCircle(inst1.posX, inst1.posY, inst1.radius, inst1.paint)
+        //notas
+        var listNotes = arrayListOf<Circle>()
+        var numCols = 10
+        //var randomRange =
+
+        var i = 0
+        while (i < numCols){
+            var _circle = Circle(400f + i * (2 * notesRadius) + (i * 20f),
+                90f,
+                Color.GRAY,
+                notesRadius)
+            listNotes.add(_circle)
+            Log.i("lista","tamanhoLista: ${listNotes.size}")
+
+            i++
+        }
+
+        //desenhando Notas
+        for(note in listNotes){
+            canvas.drawCircle(note.posX, note.posY, note.radius, note.paint)
+        }
+
+        //desenhando Instrumentos
+        for (inst in listInst) {
+            canvas.drawCircle(inst.posX, inst.posY, inst.radius, inst.paint)
+        }
+
+        //colisão de todos os toques contra TODOS os Instrumentos
+        for (inst in listInst){
+            for (position in positionCircle) {
+                if(circleCollision(inst.position, position, inst.radius, circleRadius)){
+                    when (inst) {
+                        inst1 -> inst.updateColor(Color.GREEN)
+                        inst2 -> inst.updateColor(Color.RED)
+                        inst3 -> inst.updateColor(Color.YELLOW)
+                        inst4 -> inst.updateColor(Color.BLUE)
+                    }
+                    canvas.drawCircle(inst.posX, inst.posY, inst.radius, inst.paint)
+                }
             }
         }
+
+        //colisão dos toques contra as notas (condição de estar na colisão do instrumento)
+
 
     }
 

@@ -13,6 +13,6 @@ class MainActivity : AppCompatActivity() {
         drawView = DrawView(this)
         setContentView(drawView)
 
-        //requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
     }
 }
