@@ -21,4 +21,9 @@ class Circle(var posX : Float, var posY : Float,
         paint.color = newColor
     }
 
+    fun updatePosition(speed : Float){
+        position.x += speed
+        posX += speed
+    }
+
 }

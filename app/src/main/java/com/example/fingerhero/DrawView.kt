@@ -7,9 +7,10 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 /*
-View customizada para desenho personalizado
+Finger Hero
  */
 
 
@@ -18,13 +19,94 @@ class DrawView : View, View.OnTouchListener {
     val notesRadius = 50.0f
 
     val colors =
-        arrayOf(Color.BLUE, Color.GREEN, Color.RED, Color.YELLOW, Color.CYAN)
+        arrayOf(Color.BLUE, Color.GREEN, Color.RED, Color.YELLOW)
+
+    var points : Int = 0
 
     // Especifica qual circulo esta ativo
-    var circleEnabled = Array<Boolean>(5){false}
-    var positionCircle = Array<PointF>(5){ PointF(0.0f, 0.0f) }
+    var circleEnabled = Array<Boolean>(4){false}
+    var positionCircle = Array<PointF>(4){ PointF(0.0f, 0.0f) }
+
+    //objetos
+    var inst1 : Circle
+    var inst2 : Circle
+    var inst3 : Circle
+    var inst4 : Circle
+
+    lateinit var listInst : Array<Circle>
+    lateinit var listNotes : MutableList<Circle>
 
     init {
+        //definindo objetos
+        inst1 = Circle(250.0f,90.0f)
+        inst2 = Circle(200.0f,250.0f )
+        inst3 = Circle(200.0f,420.0f)
+        inst4= Circle(250.0f,580.0f)
+
+        listInst = arrayOf(inst1, inst2, inst3, inst4)
+
+        //notas
+        listNotes = arrayListOf<Circle>()
+        var numCols = 35
+
+        var i = 0
+        while (i < numCols){
+            var random = Random.nextInt(0, 100).toFloat()
+            if(random <= 40){
+                var _circle = Circle(1000f + i * (2 * notesRadius) + (i * 40f),
+                    inst1.posY,
+                    Color.GRAY,
+                    notesRadius)
+                listNotes.add(_circle)
+            }
+
+            Log.i("lista","tamanhoLista: ${listNotes.size}")
+            Log.i("Random","random: $random")
+
+            i++
+        }
+        i=0
+        while (i < numCols) {
+            var random = Random.nextInt(0, 100).toFloat()
+            if (random <= 40) {
+                var _circle = Circle(
+                    1000f + i * (2 * notesRadius) + (i * 40f),
+                    inst2.posY,
+                    Color.GRAY,
+                    notesRadius
+                )
+                listNotes.add(_circle)
+            }
+            i++
+        }
+        i=0
+        while (i < numCols) {
+            var random = Random.nextInt(0, 100).toFloat()
+            if (random <= 40) {
+                var _circle = Circle(
+                    1000f + i * (2 * notesRadius) + (i * 40f),
+                    inst3.posY,
+                    Color.GRAY,
+                    notesRadius
+                )
+                listNotes.add(_circle)
+            }
+            i++
+        }
+        i=0
+        while (i < numCols) {
+            var random = Random.nextInt(0, 100).toFloat()
+            if (random <= 40) {
+                var _circle = Circle(
+                    1000f + i * (2 * notesRadius) + (i * 40f),
+                    inst4.posY,
+                    Color.GRAY,
+                    notesRadius
+                )
+                listNotes.add(_circle)
+            }
+            i++
+        }
 
     }
 
@@ -45,39 +127,19 @@ class DrawView : View, View.OnTouchListener {
             if (circleEnabled[index]){
                 paint.color = colors[index]
                 val position = positionCircle[index]
-                canvas?.drawCircle(position.x, position.y, circleRadius, paint)
+                canvas.drawCircle(position.x, position.y, circleRadius, paint)
             }
 
             index++
         }
 
-        //conseguindo o centro
+        //conseguindo o centro (p/ utilidades)
         val centerX = (width / 2.0f)
         val centerY = (height / 2.0f)
 
-        //definindo objetos
-        var inst1 = Circle(250.0f,90.0f)
-        var inst2 = Circle(200.0f,250.0f )
-        var inst3 = Circle(200.0f,420.0f)
-        var inst4= Circle(250.0f,580.0f)
-
-        var listInst = arrayOf(inst1, inst2, inst3, inst4)
-
-        //notas
-        var listNotes = arrayListOf<Circle>()
-        var numCols = 10
-        //var randomRange =
-
-        var i = 0
-        while (i < numCols){
-            var _circle = Circle(400f + i * (2 * notesRadius) + (i * 20f),
-                90f,
-                Color.GRAY,
-                notesRadius)
-            listNotes.add(_circle)
-            Log.i("lista","tamanhoLista: ${listNotes.size}")
-
-            i++
+        //movimento do listNotes
+        for (note in listNotes){
+            note.updatePosition(-3f)
         }
 
         //desenhando Notas
@@ -106,8 +168,31 @@ class DrawView : View, View.OnTouchListener {
         }
 
         //colisão dos toques contra as notas (condição de estar na colisão do instrumento)
+        for (inst in listInst){
+            for (note in listNotes){
+                for (position in positionCircle) {
+                    if(circleCollision(note.position, position,
+                            notesRadius, circleRadius)
+                        &&
+                        (circleCollision(note.position, inst.position,
+                            notesRadius, inst.radius,
+                            -40f))
+                        ){
+                        note.updateColor(Color.BLUE)
+                        points += 50
+                        Log.i("TESTE","COLIDIU e pontos= $points")
+                        canvas.drawCircle(note.posX, note.posY, note.radius, note.paint)
+                    }
+                }
+            }
+        }
 
+        //limpa os botões par cinza novamente
+        for (inst in listInst){
+            inst.updateColor(Color.GRAY)
+        }
 
+        invalidate()
     }
 
     // Implementacao do comportamento ao gerar o evento de touch
@@ -116,11 +201,17 @@ class DrawView : View, View.OnTouchListener {
         var pointerIndex = motionEvent?.actionIndex ?: -1
         var pointerId = motionEvent?.getPointerId(pointerIndex) ?: -1
 
+        //teste que ajudou a resolver o crash de quando se usava mais dedos do que o tamanho de circleEnabled
+        Log.i("Exception", "${circleEnabled.size}")
+        Log.i("Exception", "${pointerId}")
+
         when (motionEvent?.actionMasked){
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                circleEnabled[pointerId] = false
-                positionCircle[pointerId] = PointF(-200f,-200f)
+                if(pointerId < circleEnabled.size){
+                    circleEnabled[pointerId] = false
+                    positionCircle[pointerId] = PointF(-200f,-200f)
+                }
 
                 invalidate()
             }
@@ -132,6 +223,7 @@ class DrawView : View, View.OnTouchListener {
                     positionCircle[pointerId].x = motionEvent.getX(pointerIndex)
                     positionCircle[pointerId].y = motionEvent.getY(pointerIndex)
                 }
+
                 Log.i("Pointers", "Pointer Index: $pointerIndex")
                 Log.i("Pointers", "Pointer ID: $pointerId")
 
@@ -141,14 +233,15 @@ class DrawView : View, View.OnTouchListener {
             MotionEvent.ACTION_MOVE -> {
 
                 var index = 0
-                while (index < motionEvent.pointerCount){
+                while (index < motionEvent.pointerCount && index < circleEnabled.size){
 
                     if (index < circleEnabled.size) {
                         var _pointId = motionEvent.getPointerId(index)
-                        positionCircle[_pointId].x = motionEvent.getX(index)
-                        positionCircle[_pointId].y = motionEvent.getY(index)
+                        if(_pointId < circleEnabled.size) {
+                            positionCircle[_pointId].x = motionEvent.getX(index)
+                            positionCircle[_pointId].y = motionEvent.getY(index)
+                        }
                     }
-
                     index++
                 }
 
@@ -171,12 +264,10 @@ class DrawView : View, View.OnTouchListener {
 
         result = (dif1 * dif1) + (dif2 * dif2)
 
-        Log.i("collision", "$result")
 
         distance = sqrt(result)
 
         Log.i("collision", "distancia: $distance")
-
 
         var collision = false
 
